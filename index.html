@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>WAVEX Studio — Mobile DAW</title>
+  <style>
+    :root {
+      --bg: #0f141a;
+      --panel: #182029;
+      --panel-2: #1f2935;
+      --border: #2c3948;
+      --accent: #ff6a00;
+      --accent-soft: rgba(255, 106, 0, 0.16);
+      --cyan: #22d3ee;
+      --text: #f3f6f9;
+      --muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Top DAW Bar */
+    .topbar {
+      height: 52px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-w {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1.5px solid var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 900;
+      font-size: 18px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 12px rgba(255, 106, 0, 0.25);
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .btn-back {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Sliding Views Container */
+    .viewport {
+      position: relative;
+      width: 100%;
+      height: calc(100% - 52px);
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 14px;
+      overflow-y: auto;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+    }
+
+    #welcomeScreen {
+      transform: translateX(0);
+      opacity: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+    }
+
+    #drumScreen {
+      transform: translateX(100%);
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .viewport.show-drum #welcomeScreen {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .viewport.show-drum #drumScreen {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .welcome-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .welcome-sub {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 22px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 106, 0, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    .module-grid {
+      width: 100%;
+      max-width: 760px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .module-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 10px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .module-card.featured {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, rgba(255, 106, 0, 0.14), var(--panel));
+    }
+
+    .module-card:active {
+      transform: scale(0.97);
+    }
+
+    .module-icon {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .module-name {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    /* Drum Machine View */
+    .daw-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .pads {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .pad {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pad span.tag {
+      font-size: 10px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .pad.hit {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      transform: scale(0.97);
+    }
+
+    .track-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 175px;
+      overflow-y: auto;
+    }
+
+    .track-item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .status-note {
+      font-size: 12px;
+      color: var(--cyan);
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-w">W</div>
+      <div>
+        <div class="brand-title">WAVEX Studio</div>
+        <div class="brand-sub">Mobile DAW Prototype</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="pill">120.0 BPM</div>
+      <button id="backBtn" class="btn-back" style="display:none;" onclick="goToWelcome()">← Welcome</button>
+    </div>
+  </header>
+
+  <main id="viewport" class="viewport">
+    <!-- SCREEN 1: Welcome / Empty Workspace -->
+    <section id="welcomeScreen" class="screen">
+      <h1 class="welcome-title">Welcome to WAVEX Studio</h1>
+      <p class="welcome-sub">Start a new project or tap a module below to slide into your workspace</p>
+      <button class="btn-primary" onclick="goToDrum()">+ START PROJECT / ADD TRACK</button>
+
+      <div class="module-grid">
+        <div class="module-card featured" onclick="goToDrum()">
+          <div class="module-icon">🥁</div>
+          <div class="module-name">DRUM MACHINE</div>
+        </div>
+        <div class="module-card" onclick="addTrackAndOpen('Voice / Audio')">
+          <div class="module-icon">🎙️</div>
+          <div class="module-name">AUDIO / VOICE</div>
+        </div>
+        <div class="module-card" onclick="addTrackAndOpen('Synth / Keys')">
+          <div class="module-icon">🎹</div>
+          <div class="module-name">SYNTH / KEYS</div>
+        </div>
+        <div class="module-card" onclick="goToDrum()">
+          <div class="module-icon">✨</div>
+          <div class="module-name">AI SOUND MATCH</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: Drum Matching Machine -->
+    <section id="drumScreen" class="screen">
+      <div class="daw-row">
+        <div class="card">
+          <div class="card-header">
+            <span>Drum Pads & Engine</span>
+            <span style="color: var(--accent);">98.2% MATCH</span>
+          </div>
+          <div class="pads">
+            <button class="pad" onclick="triggerDrum('kick', this)">KICK <span class="tag">TAP</span></button>
+            <button class="pad" onclick="triggerDrum('snare', this)">SNARE <span class="tag">TAP</span></button>
+            <button class="pad" onclick="triggerDrum('hihat', this)">HI-HAT <span class="tag">TAP</span></button>
+            <button class="pad" onclick="triggerDrum('bass', this)">808 / BASS <span class="tag">TAP</span></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>Tracks</span>
+            <button class="btn-add" onclick="addTrack('Audio / Voice')">+ ADD TRACK</button>
+          </div>
+          <div id="trackList" class="track-list">
+            <div class="track-item"><span>Track 1 — Drum Matching Kit</span><span>Active</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="statusNote" class="status-note">Tap any drum pad to test live Web Audio synthesis.</div>
+    </section>
+  </main>
+
+  <script>
+    const viewport = document.getElementById('viewport');
+    const backBtn = document.getElementById('backBtn');
+    const trackList = document.getElementById('trackList');
+    const statusNote = document.getElementById('statusNote');
+
+    let audioCtx = null;
+    let trackCount = 1;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function goToDrum() {
+      ensureAudio();
+      viewport.classList.add('show-drum');
+      backBtn.style.display = 'inline-block';
+    }
+
+    function goToWelcome() {
+      viewport.classList.remove('show-drum');
+      backBtn.style.display = 'none';
+    }
+
+    function addTrack(label) {
+      trackCount += 1;
+      const row = document.createElement('div');
+      row.className = 'track-item';
+      row.innerHTML = `<span>Track ${trackCount} — ${label}</span><span>Ready</span>`;
+      trackList.appendChild(row);
+      statusNote.textContent = `Added Track ${trackCount} (${label}).`;
+    }
+
+    function addTrackAndOpen(label) {
+      goToDrum();
+      addTrack(label);
+    }
+
+    function triggerDrum(type, el) {
+      ensureAudio();
+      if (el) {
+        el.classList.add('hit');
+        setTimeout(() => el.classList.remove('hit'), 120);
+      }
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'kick' || type === 'bass') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        const startFreq = type === 'kick' ? 140 : 85;
+        const endFreq = type === 'kick' ? 38 : 34;
+        const dur = type === 'kick' ? 0.35 : 0.55;
+
+        osc.frequency.setValueAtTime(startFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, now + dur);
+
+        gain.gain.setValueAtTime(0.9, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + dur);
+        statusNote.textContent = `Played ${type.toUpperCase()}`;
+        return;
+      }
+
+      // Noise buffer for Snare & Hi-Hat
+      const bufferSize = Math.floor(audioCtx.sampleRate * 0.2);
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      const gain = audioCtx.createGain();
+
+      if (type === 'snare') {
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1400, now);
+        gain.gain.setValueAtTime(0.6, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+        noise.stop(now + 0.18);
+      } else {
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(7500, now);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(now);
+        noise.stop(now + 0.06);
+      }
+
+      statusNote.textContent = `Played ${type.toUpperCase()}`;
+    }
+  </script>
+</body>
+</html>
